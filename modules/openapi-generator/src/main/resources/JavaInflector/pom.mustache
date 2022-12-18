@@ -164,6 +164,22 @@
        </repository>
 {{/customRepository}}
     </repositories>
+{{#distributionManagement}}
+    <distributionManagement>
+        <repository>
+            <id>{{{distributionManagementId}}}</id>
+            <name>{{{distributionManagementName}}}</name>
+            <url>{{{distributionManagementUrl}}}</url>
+        </repository>
+        {{#distributionManagementSnapshot}}
+        <snapshotRepository>
+            <id>{{{distributionManagementSnapshotId}}}</id>
+            <name>{{{distributionManagementSnapshotName}}}</name>
+            <url>{{{distributionManagementSnapshotUrl}}}</url>
+        </snapshotRepository>
+        {{/distributionManagementSnapshot}}
+    </distributionManagement>
+{{/distributionManagement}}
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven-plugin-version>1.0.0</maven-plugin-version>

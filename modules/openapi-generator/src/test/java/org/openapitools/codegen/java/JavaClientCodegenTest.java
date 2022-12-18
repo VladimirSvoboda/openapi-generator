@@ -1896,4 +1896,116 @@ public class JavaClientCodegenTest {
 
         output.deleteOnExit();
     }
+
+    @Test
+    public void testNoDistributionManagementIfNotAllParametersProvided() throws IOException {
+        Map<String, Object> properties = new HashMap<>();
+        properties.put(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_ID, "private-repo");
+        properties.put(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_NAME, "Custom repository");
+        // Did not provide distribution management repository URL.
+
+        File output = Files.createTempDirectory("test").toFile();
+
+        final CodegenConfigurator configurator = new CodegenConfigurator()
+                .setAdditionalProperties(properties)
+                .setGeneratorName("java")
+                .setLibrary(JavaClientCodegen.RESTTEMPLATE)
+                .setInputSpec("src/test/resources/3_0/petstore.yaml")
+                .setOutputDir(output.getAbsolutePath().replace("\\", "/"));
+
+        final ClientOptInput clientOptInput = configurator.toClientOptInput();
+        DefaultGenerator generator = new DefaultGenerator();
+        List<File> files = generator.opts(clientOptInput).generate();
+
+        TestUtils.ensureContainsFile(files, output, "pom.xml");
+
+        validateJavaSourceFiles(files);
+
+        final Path pomXmlPath = Paths.get(output + "/pom.xml");
+        TestUtils.assertFileNotContains(pomXmlPath, "<distributionManagement>");
+
+        output.deleteOnExit();
+    }
+
+    @Test
+    public void testDistributionManagementNoSnapshot() throws IOException {
+        Map<String, Object> properties = new HashMap<>();
+        properties.put(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_ID, "private-repo");
+        properties.put(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_NAME, "Custom repository");
+        properties.put(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_URL, "https://customrepository.example.com/repository/maven-public/");
+
+        File output = Files.createTempDirectory("test").toFile();
+
+        final CodegenConfigurator configurator = new CodegenConfigurator()
+                .setAdditionalProperties(properties)
+                .setGeneratorName("java")
+                .setLibrary(JavaClientCodegen.VERTX)
+                .setInputSpec("src/test/resources/3_0/petstore.yaml")
+                .setOutputDir(output.getAbsolutePath().replace("\\", "/"));
+
+        final ClientOptInput clientOptInput = configurator.toClientOptInput();
+        DefaultGenerator generator = new DefaultGenerator();
+        List<File> files = generator.opts(clientOptInput).generate();
+
+        TestUtils.ensureContainsFile(files, output, "pom.xml");
+
+        validateJavaSourceFiles(files);
+
+        final Path pomXmlPath = Paths.get(output + "/pom.xml");
+        TestUtils.assertFileContains(pomXmlPath, "<distributionManagement>");
+        TestUtils.assertFileContains(pomXmlPath, "<repository>");
+        TestUtils.assertFileContains(pomXmlPath, "<id>private-repo</id>");
+        TestUtils.assertFileContains(pomXmlPath, "<name>Custom repository</name>");
+        TestUtils.assertFileContains(pomXmlPath, "<url>https://customrepository.example.com/repository/maven-public/</url>");
+        TestUtils.assertFileContains(pomXmlPath, "</repository>");
+        TestUtils.assertFileContains(pomXmlPath, "</distributionManagement>");
+        TestUtils.assertFileNotContains(pomXmlPath, "<snapshotRepository>");
+        TestUtils.assertFileNotContains(pomXmlPath, "</snapshotRepository>");
+
+        output.deleteOnExit();
+    }
+
+        @Test
+    public void testDistributionManagementWithSnapshot() throws IOException {
+        Map<String, Object> properties = new HashMap<>();
+        properties.put(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_ID, "private-repo");
+        properties.put(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_NAME, "Custom repository");
+        properties.put(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_URL, "https://customrepository.example.com/repository/maven-public/");
+        properties.put(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_SNAPSHOT_ID, "private-repo-snapshot");
+        properties.put(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_SNAPSHOT_NAME, "Custom repository snapshot");
+        properties.put(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_SNAPSHOT_URL, "https://customrepository.example.com/repository/maven-snapshots/");
+
+        File output = Files.createTempDirectory("test").toFile();
+
+        final CodegenConfigurator configurator = new CodegenConfigurator()
+                .setAdditionalProperties(properties)
+                .setGeneratorName("java")
+                .setLibrary(JavaClientCodegen.FEIGN)
+                .setInputSpec("src/test/resources/3_0/petstore.yaml")
+                .setOutputDir(output.getAbsolutePath().replace("\\", "/"));
+
+        final ClientOptInput clientOptInput = configurator.toClientOptInput();
+        DefaultGenerator generator = new DefaultGenerator();
+        List<File> files = generator.opts(clientOptInput).generate();
+
+        TestUtils.ensureContainsFile(files, output, "pom.xml");
+
+        validateJavaSourceFiles(files);
+
+        final Path pomXmlPath = Paths.get(output + "/pom.xml");
+        TestUtils.assertFileContains(pomXmlPath, "<distributionManagement>");
+        TestUtils.assertFileContains(pomXmlPath, "<repository>");
+        TestUtils.assertFileContains(pomXmlPath, "<id>private-repo</id>");
+        TestUtils.assertFileContains(pomXmlPath, "<name>Custom repository</name>");
+        TestUtils.assertFileContains(pomXmlPath, "<url>https://customrepository.example.com/repository/maven-public/</url>");
+        TestUtils.assertFileContains(pomXmlPath, "</repository>");
+        TestUtils.assertFileContains(pomXmlPath, "<snapshotRepository>");
+        TestUtils.assertFileContains(pomXmlPath, "<id>private-repo-snapshot</id>");
+        TestUtils.assertFileContains(pomXmlPath, "<name>Custom repository snapshot</name>");
+        TestUtils.assertFileContains(pomXmlPath, "<url>https://customrepository.example.com/repository/maven-snapshots/</url>");
+        TestUtils.assertFileContains(pomXmlPath, "</snapshotRepository>");
+        TestUtils.assertFileContains(pomXmlPath, "</distributionManagement>");
+
+        output.deleteOnExit();
+    }
 }

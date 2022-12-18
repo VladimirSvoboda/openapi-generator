@@ -38,6 +38,7 @@ import io.swagger.v3.parser.core.models.ParseOptions;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Consumer;
@@ -1213,7 +1214,7 @@ public class SpringCodegenTest {
         codegen.setHateoas(true);
         generator.setGeneratorPropertyDefault(CodegenConstants.MODELS, "true");
         generator.setGeneratorPropertyDefault(CodegenConstants.LEGACY_DISCRIMINATOR_BEHAVIOR, "false");
-        
+
 
         codegen.setUseOneOfInterfaces(true);
         codegen.setLegacyDiscriminatorBehavior(false);
@@ -1970,7 +1971,7 @@ public class SpringCodegenTest {
                 .assertParameterAnnotations()
                 .containsWithNameAndAttributes("Min", ImmutableMap.of("value", "2"));
     }
-    
+
     @Test
     public void shouldHandleSeparatelyInterfaceAndModelAdditionalAnnotations() throws IOException {
         File output = Files.createTempDirectory("test").toFile().getCanonicalFile();
@@ -2055,6 +2056,119 @@ public class SpringCodegenTest {
                 .hasParameter("param3").toConstructor()
                 .hasParameter("param6").toConstructor()
                 .bodyContainsLines("super(param2, param3)", "this.param6 = param6");
+    }
+
+    @Test
+    public void testDistributionManagementNoSnapshot() throws IOException {
+        File output = Files.createTempDirectory("test").toFile().getCanonicalFile();
+        output.deleteOnExit();
+
+        OpenAPI openAPI = new OpenAPIParser()
+            .readLocation("src/test/resources/bugs/issue_13917.yaml", null, new ParseOptions()).getOpenAPI();
+        SpringCodegen codegen = new SpringCodegen();
+        codegen.setLibrary(SPRING_BOOT);
+        codegen.setOutputDir(output.getAbsolutePath());
+        codegen.additionalProperties().put(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_ID, "private-repo");
+        codegen.additionalProperties().put(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_NAME, "Custom repository");
+        codegen.additionalProperties().put(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_URL, "https://customrepository.example.com/repository/maven-public/");
+
+        ClientOptInput input = new ClientOptInput()
+            .openAPI(openAPI)
+            .config(codegen);
+
+        DefaultGenerator generator = new DefaultGenerator();
+        List<File> files = generator.opts(input).generate();
+
+        TestUtils.ensureContainsFile(files, output, "pom.xml");
+
+        TestUtils.validateJavaSourceFiles(files);
+
+        final Path pomXmlPath = Paths.get(output + "/pom.xml");
+        TestUtils.assertFileContains(pomXmlPath, "<distributionManagement>");
+        TestUtils.assertFileContains(pomXmlPath, "<repository>");
+        TestUtils.assertFileContains(pomXmlPath, "<id>private-repo</id>");
+        TestUtils.assertFileContains(pomXmlPath, "<name>Custom repository</name>");
+        TestUtils.assertFileContains(pomXmlPath, "<url>https://customrepository.example.com/repository/maven-public/</url>");
+        TestUtils.assertFileContains(pomXmlPath, "</repository>");
+        TestUtils.assertFileContains(pomXmlPath, "</distributionManagement>");
+        TestUtils.assertFileNotContains(pomXmlPath, "<snapshotRepository>");
+        TestUtils.assertFileNotContains(pomXmlPath, "</snapshotRepository>");
+    }
+
+    @Test
+    public void testNoDistributionManagementIfNotAllParametersProvided() throws IOException {
+        File output = Files.createTempDirectory("test").toFile().getCanonicalFile();
+        output.deleteOnExit();
+
+        OpenAPI openAPI = new OpenAPIParser()
+            .readLocation("src/test/resources/bugs/issue_13917.yaml", null, new ParseOptions()).getOpenAPI();
+        SpringCodegen codegen = new SpringCodegen();
+        codegen.setLibrary(SPRING_BOOT);
+        codegen.setOutputDir(output.getAbsolutePath());
+        codegen.additionalProperties().put(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_ID, "private-repo");
+        codegen.additionalProperties().put(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_NAME, "Custom repository");
+        // Did not provide distribution management repository URL.
+
+        ClientOptInput input = new ClientOptInput()
+            .openAPI(openAPI)
+            .config(codegen);
+
+        DefaultGenerator generator = new DefaultGenerator();
+        List<File> files = generator.opts(input).generate();
+
+        TestUtils.ensureContainsFile(files, output, "pom.xml");
+
+        TestUtils.validateJavaSourceFiles(files);
+
+        final Path pomXmlPath = Paths.get(output + "/pom.xml");
+        TestUtils.assertFileNotContains(pomXmlPath, "<distributionManagement>");
+
+        output.deleteOnExit();
+    }
+
+    @Test
+    public void testDistributionManagementWithSnapshot() throws IOException {
+        File output = Files.createTempDirectory("test").toFile().getCanonicalFile();
+        output.deleteOnExit();
+
+        OpenAPI openAPI = new OpenAPIParser()
+            .readLocation("src/test/resources/bugs/issue_13917.yaml", null, new ParseOptions()).getOpenAPI();
+        SpringCodegen codegen = new SpringCodegen();
+        codegen.setLibrary(SPRING_BOOT);
+        codegen.setOutputDir(output.getAbsolutePath());
+        codegen.additionalProperties().put(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_ID, "private-repo");
+        codegen.additionalProperties().put(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_NAME, "Custom repository");
+        codegen.additionalProperties().put(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_URL, "https://customrepository.example.com/repository/maven-public/");
+        codegen.additionalProperties().put(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_SNAPSHOT_ID, "private-repo-snapshot");
+        codegen.additionalProperties().put(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_SNAPSHOT_NAME, "Custom repository snapshot");
+        codegen.additionalProperties().put(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_SNAPSHOT_URL, "https://customrepository.example.com/repository/maven-snapshots/");
+
+        ClientOptInput input = new ClientOptInput()
+            .openAPI(openAPI)
+            .config(codegen);
+
+        DefaultGenerator generator = new DefaultGenerator();
+        List<File> files = generator.opts(input).generate();
+
+        TestUtils.ensureContainsFile(files, output, "pom.xml");
+
+        TestUtils.validateJavaSourceFiles(files);
+
+        final Path pomXmlPath = Paths.get(output + "/pom.xml");
+        TestUtils.assertFileContains(pomXmlPath, "<distributionManagement>");
+        TestUtils.assertFileContains(pomXmlPath, "<repository>");
+        TestUtils.assertFileContains(pomXmlPath, "<id>private-repo</id>");
+        TestUtils.assertFileContains(pomXmlPath, "<name>Custom repository</name>");
+        TestUtils.assertFileContains(pomXmlPath, "<url>https://customrepository.example.com/repository/maven-public/</url>");
+        TestUtils.assertFileContains(pomXmlPath, "</repository>");
+        TestUtils.assertFileContains(pomXmlPath, "<snapshotRepository>");
+        TestUtils.assertFileContains(pomXmlPath, "<id>private-repo-snapshot</id>");
+        TestUtils.assertFileContains(pomXmlPath, "<name>Custom repository snapshot</name>");
+        TestUtils.assertFileContains(pomXmlPath, "<url>https://customrepository.example.com/repository/maven-snapshots/</url>");
+        TestUtils.assertFileContains(pomXmlPath, "</snapshotRepository>");
+        TestUtils.assertFileContains(pomXmlPath, "</distributionManagement>");
+
+        output.deleteOnExit();
     }
 
     private Map<String, File> generateFromContract(String url, String library) throws IOException {

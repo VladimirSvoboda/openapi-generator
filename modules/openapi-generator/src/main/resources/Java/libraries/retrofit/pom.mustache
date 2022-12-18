@@ -287,4 +287,20 @@
         </repository>
     </repositories>
 {{/customRepository}}
+{{#distributionManagement}}
+    <distributionManagement>
+        <repository>
+            <id>{{{distributionManagementId}}}</id>
+            <name>{{{distributionManagementName}}}</name>
+            <url>{{{distributionManagementUrl}}}</url>
+        </repository>
+        {{#distributionManagementSnapshot}}
+        <snapshotRepository>
+            <id>{{{distributionManagementSnapshotId}}}</id>
+            <name>{{{distributionManagementSnapshotName}}}</name>
+            <url>{{{distributionManagementSnapshotUrl}}}</url>
+        </snapshotRepository>
+        {{/distributionManagementSnapshot}}
+    </distributionManagement>
+{{/distributionManagement}}
 </project>

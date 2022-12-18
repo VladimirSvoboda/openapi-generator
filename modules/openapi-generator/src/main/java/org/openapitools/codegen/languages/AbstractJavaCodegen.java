@@ -99,6 +99,24 @@ public abstract class AbstractJavaCodegen extends DefaultCodegen implements Code
     public static final String CUSTOM_REPOSITORY_URL = "customRepositoryUrl";
     public static final String CUSTOM_REPOSITORY_URL_DESC = "Repository URL in generated pom N.B. customRepositoryId, customRepositoryName and customRepositoryUrl must all be specified for any of them to take effect";
 
+    public static final String DISTRIBUTION_MANAGEMENT_ID = "distributionManagementId";
+    public static final String DISTRIBUTION_MANAGEMENT_ID_DESC = "Repository ID for distribution management in generated pom N.B. distributionManagementId, distributionManagementName and distributionManagementUrl must all be specified for any of them to take effect";
+
+    public static final String DISTRIBUTION_MANAGEMENT_NAME = "distributionManagementName";
+    public static final String DISTRIBUTION_MANAGEMENT_NAME_DESC = "Repository name for distribution management in generated pom N.B. distributionManagementId, distributionManagementName and distributionManagementUrl must all be specified for any of them to take effect";
+
+    public static final String DISTRIBUTION_MANAGEMENT_URL = "distributionManagementUrl";
+    public static final String DISTRIBUTION_MANAGEMENT_URL_DESC = "Repository URL for distribution management in generated pom N.B. distributionManagementId, distributionManagementName and distributionManagementUrl must all be specified for any of them to take effect";
+    public static final String DISTRIBUTION_MANAGEMENT_SNAPSHOT_ID = "distributionManagementSnapshotId";
+    public static final String DISTRIBUTION_MANAGEMENT_SNAPSHOT_ID_DESC = "Repository ID for snapshot distribution management in generated pom N.B. All distributionManagement* options must all be specified for any of the distributionManagementSnapshot* to take effect";
+
+    public static final String DISTRIBUTION_MANAGEMENT_SNAPSHOT_NAME = "distributionManagementSnapshotName";
+    public static final String DISTRIBUTION_MANAGEMENT_SNAPSHOT_NAME_DESC = "Repository name for snapshot distribution management in generated pom N.B. All distributionManagement* options must all be specified for any of the distributionManagementSnapshot* to take effect";
+
+    public static final String DISTRIBUTION_MANAGEMENT_SNAPSHOT_URL = "distributionManagementSnapshotUrl";
+    public static final String DISTRIBUTION_MANAGEMENT_SNAPSHOT_URL_DESC = "Repository URL for snapshot distribution management in generated pom N.B. All distributionManagement* options must all be specified for any of the distributionManagementSnapshot* to take effect";
+
+
     public static final String DEFAULT_TEST_FOLDER = "${project.build.directory}/generated-test-sources/openapi";
 
     protected String dateLibrary = "java8";
@@ -143,6 +161,14 @@ public abstract class AbstractJavaCodegen extends DefaultCodegen implements Code
     protected String customRepositoryId = "";
     protected String customRepositoryName = "";
     protected String customRepositoryUrl = "";
+    protected boolean distributionManagement = false;
+    protected String distributionManagementId = "";
+    protected String distributionManagementName = "";
+    protected String distributionManagementUrl = "";
+    protected boolean distributionManagementSnapshot = false;
+    protected String distributionManagementSnapshotId = "";
+    protected String distributionManagementSnapshotName = "";
+    protected String distributionManagementSnapshotUrl = "";
     protected List<String> additionalModelTypeAnnotations = new LinkedList<>();
     protected List<String> additionalOneOfTypeAnnotations = new LinkedList<>();
     protected List<String> additionalEnumTypeAnnotations = new LinkedList<>();
@@ -300,6 +326,14 @@ public abstract class AbstractJavaCodegen extends DefaultCodegen implements Code
         cliOptions.add(CliOption.newString(AbstractJavaCodegen.CUSTOM_REPOSITORY_ID, AbstractJavaCodegen.CUSTOM_REPOSITORY_ID_DESC));
         cliOptions.add(CliOption.newString(AbstractJavaCodegen.CUSTOM_REPOSITORY_NAME, AbstractJavaCodegen.CUSTOM_REPOSITORY_NAME_DESC));
         cliOptions.add(CliOption.newString(AbstractJavaCodegen.CUSTOM_REPOSITORY_URL, AbstractJavaCodegen.CUSTOM_REPOSITORY_URL_DESC));
+
+        cliOptions.add(CliOption.newString(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_ID, AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_ID_DESC));
+        cliOptions.add(CliOption.newString(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_NAME, AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_NAME_DESC));
+        cliOptions.add(CliOption.newString(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_URL, AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_URL_DESC));
+
+        cliOptions.add(CliOption.newString(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_SNAPSHOT_ID, AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_SNAPSHOT_ID_DESC));
+        cliOptions.add(CliOption.newString(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_SNAPSHOT_NAME, AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_SNAPSHOT_NAME_DESC));
+        cliOptions.add(CliOption.newString(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_SNAPSHOT_URL, AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_SNAPSHOT_URL_DESC));
 
         CliOption snapShotVersion = CliOption.newString(CodegenConstants.SNAPSHOT_VERSION, CodegenConstants.SNAPSHOT_VERSION_DESC);
         Map<String, String> snapShotVersionOptions = new HashMap<>();
@@ -593,6 +627,30 @@ public abstract class AbstractJavaCodegen extends DefaultCodegen implements Code
             this.setCustomRepositoryUrl((String) additionalProperties.get(AbstractJavaCodegen.CUSTOM_REPOSITORY_URL));
         }
 
+        if (additionalProperties.containsKey(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_ID)) {
+            this.setDistributionManagementId((String) additionalProperties.get(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_ID));
+        }
+
+        if (additionalProperties.containsKey(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_NAME)) {
+            this.setDistributionManagementName((String) additionalProperties.get(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_NAME));
+        }
+
+        if (additionalProperties.containsKey(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_URL)) {
+            this.setDistributionManagementUrl((String) additionalProperties.get(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_URL));
+        }
+
+        if (additionalProperties.containsKey(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_SNAPSHOT_ID)) {
+            this.setDistributionManagementSnapshotId((String) additionalProperties.get(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_SNAPSHOT_ID));
+        }
+
+        if (additionalProperties.containsKey(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_SNAPSHOT_NAME)) {
+            this.setDistributionManagementSnapshotName((String) additionalProperties.get(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_SNAPSHOT_NAME));
+        }
+
+        if (additionalProperties.containsKey(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_SNAPSHOT_URL)) {
+            this.setDistributionManagementSnapshotUrl((String) additionalProperties.get(AbstractJavaCodegen.DISTRIBUTION_MANAGEMENT_SNAPSHOT_URL));
+        }
+
         if (additionalProperties.containsKey(IMPLICIT_HEADERS)) {
             this.setImplicitHeaders(Boolean.parseBoolean(additionalProperties.get(IMPLICIT_HEADERS).toString()));
         }
@@ -611,6 +669,14 @@ public abstract class AbstractJavaCodegen extends DefaultCodegen implements Code
 
         if (!StringUtils.isEmpty(customRepositoryId) && !StringUtils.isEmpty(customRepositoryName) && !StringUtils.isEmpty(customRepositoryUrl)) {
             additionalProperties.put("customRepository", true);
+        }
+
+        if (!StringUtils.isEmpty(distributionManagementId) && !StringUtils.isEmpty(distributionManagementName) && !StringUtils.isEmpty(distributionManagementUrl)) {
+            additionalProperties.put("distributionManagement", true);
+        }
+
+        if (!StringUtils.isEmpty(distributionManagementSnapshotId) && !StringUtils.isEmpty(distributionManagementSnapshotName) && !StringUtils.isEmpty(distributionManagementSnapshotUrl)) {
+            additionalProperties.put("distributionManagementSnapshot", true);
         }
 
         // make api and model doc path available in mustache template
@@ -2254,6 +2320,38 @@ public abstract class AbstractJavaCodegen extends DefaultCodegen implements Code
 
     public void setCustomRepository(final boolean customRepository) {
         this.customRepository = customRepository;
+    }
+
+    public void setDistributionManagementId(final String distributionManagementId) {
+        this.distributionManagementId = distributionManagementId;
+    }
+
+    public void setDistributionManagementName(final String distributionManagementName) {
+        this.distributionManagementName = distributionManagementName;
+    }
+
+    public void setDistributionManagementUrl(final String distributionManagementUrl) {
+        this.distributionManagementUrl = distributionManagementUrl;
+    }
+
+    public void setDistributionManagement(final boolean distributionManagement) {
+        this.distributionManagement = distributionManagement;
+    }
+
+    public void setDistributionManagementSnapshotId(final String distributionManagementSnapshotId) {
+        this.distributionManagementSnapshotId = distributionManagementSnapshotId;
+    }
+
+    public void setDistributionManagementSnapshotName(final String distributionManagementSnapshotName) {
+        this.distributionManagementSnapshotName = distributionManagementSnapshotName;
+    }
+
+    public void setDistributionManagementSnapshotUrl(final String distributionManagementSnapshotUrl) {
+        this.distributionManagementSnapshotUrl = distributionManagementSnapshotUrl;
+    }
+
+    public void setDistributionManagementSnapshot(final boolean distributionManagementSnapshot) {
+        this.distributionManagementSnapshot = distributionManagementSnapshot;
     }
 
     public List<String> getAdditionalModelTypeAnnotations() {

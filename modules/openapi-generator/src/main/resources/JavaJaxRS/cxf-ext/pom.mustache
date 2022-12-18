@@ -212,6 +212,22 @@
     </repository>
 {{/customRepository}}
   </repositories>
+{{#distributionManagement}}
+  <distributionManagement>
+    <repository>
+      <id>{{{distributionManagementId}}}</id>
+      <name>{{{distributionManagementName}}}</name>
+      <url>{{{distributionManagementUrl}}}</url>
+    </repository>
+    {{#distributionManagementSnapshot}}
+    <snapshotRepository>
+      <id>{{{distributionManagementSnapshotId}}}</id>
+      <name>{{{distributionManagementSnapshotName}}}</name>
+      <url>{{{distributionManagementSnapshotUrl}}}</url>
+    </snapshotRepository>
+    {{/distributionManagementSnapshot}}
+  </distributionManagement>
+{{/distributionManagement}}
   <properties>
     <java.version>1.8</java.version>
     <maven.compiler.source>${java.version}</maven.compiler.source>
